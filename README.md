@@ -1,0 +1,2 @@
+# My_WebSocket_Clipboard
+解决通过Vnc，x11Vnc远程控制剪切板共享方案
