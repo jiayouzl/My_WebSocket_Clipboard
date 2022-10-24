@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-100">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My SocketIO</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/5.1.3/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.6.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/socket.io/3.0.4/socket.io.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/2.11.2/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script src="https://cdn.staticfile.org/clipboard.js/2.0.11/clipboard.min.js"></script>
+    <script src="https://cdn.staticfile.org/js-xss/0.3.3/xss.min.js"></script>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function () {
+            new ClipboardJS(".btn-primary");
+
+            var socket = io();
+
+            // 新连接的事件处理程序。
+            // 当与服务器被建立。
+            socket.on('connect', function () {
+                socket.emit('my_event', { data: '连接成功！' });
+                // socket.emit('my_event', { data: 'I\'m connected!' });
+            });
+
+            // 服务器发送数据的事件处理程序。
+            // 每当服务器发出数据时调用回调函数给客户端。然后将数据显示在 “已接收” 中
+            socket.on('my_response', function (msg, cb) {
+                //判断msg是否为指定的部分数据
+                if (msg.data.indexOf('Server event ── ') != -1) {
+                    //如果是，就执行回调函数
+                    $('#xintiao').text(msg.data);
+                } else {
+                    // $('#log').append('<br>' + $('<div/>').text('收到 #' + msg.count + ': ' + msg.data).html());
+                    // $('#log').prepend('<li class="list-group-item">' + $('<div/>').text('收到：' + msg.count + '：' + msg.data).html() + '<button type="button" class="btn btn-primary" data-clipboard-text="' + msg.data + '">复制</button>');
+                    //取现在时间
+                    var now = new Date();
+                    var hour = now.getHours();//得到小时
+                    var minu = now.getMinutes();//得到分钟
+                    var sec = now.getSeconds();//得到秒
+                    var nowtime = hour + ":" + minu + ":" + sec;
+                    $('#log').prepend('<li class="list-group-item"><div>' + $('<li/>').text('收到：' + msg.count + ' 时间：' + nowtime).html() + '<button type="button" class="btn btn-primary" data-clipboard-target="#copy' + msg.count + '">复制</button></div>' + '<pre id="copy' + msg.count + '">' + filterXSS(msg.data) + '</pre>');
+                }
+                if (cb)
+                    cb();
+            });
+
+            // 通过发送 “ping” 来测试消息延迟的间隔函数
+            // 消息。然后，服务器以 “pong” 消息进行响应，并且测量往返时间。
+            var ping_pong_times = [];
+            var start_time;
+            window.setInterval(function () {
+                start_time = (new Date).getTime();
+                $('#transport').text(socket.io.engine.transport.name);
+                socket.emit('my_ping');
+            }, 1000);
+
+            // “pong” 消息的处理程序。当收到pong时，存储来自ping的时间，并且最近30个的平均值样本是平均的并显示。
+            socket.on('my_pong', function () {
+                var latency = (new Date).getTime() - start_time;
+                ping_pong_times.push(latency);
+                ping_pong_times = ping_pong_times.slice(-30);//保留最后30个样本
+                var sum = 0;
+                for (var i = 0; i < ping_pong_times.length; i++)
+                    sum += ping_pong_times[i];
+                $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
+            });
+
+            // 页面中不同表单的处理程序。
+            // 这些接受来自用户的数据，并将其发送到服务器多种方式。
+            $('form#broadcast').submit(function (event) {
+                //判断输入框是否为空
+                if ($('#broadcast_data').val() == '') {
+                    alert('请输入内容！');
+                    //获取焦点
+                    $('#broadcast_data').focus();
+                    return false;
+                }
+                socket.emit('my_broadcast_event', { data: $('#broadcast_data').val() });
+                //清空输入框
+                $('#broadcast_data').val('');
+                return false;
+            });
+
+            //转义html标签,防止XSS攻击-淘汰,用js-xss这个库代替.
+            function filter(str) {
+                var s = str;
+                s = s.replace(/</g, '&lt;');
+                s = s.replace(/>/g, '&gt;');
+                return s;
+            }
+        });
+    </script>
+    <style type="text/css">
+        /* Custom default button */
+        .btn-secondary,
+        .btn-secondary:hover,
+        .btn-secondary:focus {
+            color: #333;
+            text-shadow: none;
+        }
+
+        .cover-container {
+            max-width: 70em;
+        }
+
+        li {
+            line-height: 40px;
+        }
+
+        /* 按钮在右边 */
+        ul li button {
+            float: right;
+        }
+    </style>
+</head>
+
+<body class="d-flex h-100 text-white bg-dark">
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <main class="px-3">
+            <h5>My_WebSocket(解决VNC等剪切板同步)</h5>
+            <p>
+                <!-- 异步模式为：<b>{{ async_mode }}</b>
+                当前传输为：<b><span id="transport"></span></b> -->
+                <!-- 平均ping/pong延迟：<b><span id="ping-pong"></span>毫秒</b> -->
+                <!-- 延迟：<b><span id="ping-pong"></span>毫秒</b> -->
+                模式：<b>{{ async_mode }}</b>
+                传输：<b><span id="transport"></span></b>
+                延迟：<b><span id="ping-pong"></span>ms</b>
+                <br>
+                心跳：<b><span id="xintiao"></span></b>
+            </p>
+            <form id="broadcast" method="POST" action='#'>
+                <div class="mb-3">
+                    <label for="broadcast_data" class="form-label">发送信息：</label>
+                    <textarea class="form-control" name="broadcast_data" id="broadcast_data" placeholder="Message" rows="4"></textarea>
+                </div>
+                <div class="mb-3 d-grid gap-1">
+                    <input class="btn btn-success" type="submit" value="发送广播">
+                </div>
+
+            </form>
+            <div class="mb-3">
+                <label for="log" class="form-label">收到的信息列表：</label>
+                <!-- <div id="log"></div> -->
+                <ul class="list-group" id="log">
+                    <!-- <li class="list-group-item">test</li> -->
+                </ul>
+            </div>
+        </main>
+
+        <footer class="mt-auto text-white-50 text-center">
+            <p>© 2022-2022 <a href="https://github.com/jiayouzl/" class="text-white">@jiayouzl</a>.</p>
+        </footer>
+    </div>
+</body>
+
+</html>
