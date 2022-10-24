@@ -8,7 +8,7 @@ from flask_socketio import SocketIO, emit
 async_mode = None
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'f48761c63f406d6efc60838fb4dfeff1'
+app.config['SECRET_KEY'] = 'f49761c63f406d6efc60838fb4dfeff2'
 socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock()
@@ -25,7 +25,7 @@ def background_thread():
         socketio.emit('my_response', {'data': 'Server event ── ' + now_time, 'count': count})
 
 
-#http://192.168.5.181:5001
+#http://192.168.5.100:5001
 @app.route('/')
 def index():
     return render_template('my_websocket.html', async_mode=socketio.async_mode)
@@ -53,10 +53,9 @@ def connect():
     global thread
     with thread_lock:
         if thread is None:
-            thread = socketio.start_background_task(background_thread)
-    # emit('my_response', {'data': 'Connected', 'count': 0})
+            thread = socketio.start_background_task(background_thread))
     emit('my_response', {'data': '正在连接中.....', 'count': 0})
 
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5001, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5001, debug=False)
