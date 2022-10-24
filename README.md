@@ -1,6 +1,8 @@
 # My_WebSocket_Clipboard
 通过WebSocket技术解决Vnc，x11Vnc远程控制剪切板不能共享方案。
 
+响应式布局，兼容PC，Mobile端。
+
 <img width="594" alt="image" src="https://user-images.githubusercontent.com/7685337/197466681-968c78bc-3672-4bd4-8704-b3dc45ccef80.png">
 
 # Installation
