@@ -35,8 +35,6 @@
                     //如果是，就执行回调函数
                     $('#xintiao').text(msg.data);
                 } else {
-                    // $('#log').append('<br>' + $('<div/>').text('收到 #' + msg.count + ': ' + msg.data).html());
-                    // $('#log').prepend('<li class="list-group-item">' + $('<div/>').text('收到：' + msg.count + '：' + msg.data).html() + '<button type="button" class="btn btn-primary" data-clipboard-text="' + msg.data + '">复制</button>');
                     //取现在时间
                     var now = new Date();
                     var hour = now.getHours();//得到小时
@@ -146,15 +144,12 @@
             </form>
             <div class="mb-3">
                 <label for="log" class="form-label">收到的信息列表：</label>
-                <!-- <div id="log"></div> -->
-                <ul class="list-group" id="log">
-                    <!-- <li class="list-group-item">test</li> -->
-                </ul>
+                <ul class="list-group" id="log"></ul>
             </div>
         </main>
 
         <footer class="mt-auto text-white-50 text-center">
-            <p>© 2022-2022 <a href="https://github.com/jiayouzl/" class="text-white">@jiayouzl</a>.</p>
+            <p>© 2022-2022 <a href="https://github.com/jiayouzl/My_WebSocket_Clipboard/" class="text-white">@jiayouzl</a>.</p>
         </footer>
     </div>
 </body>
